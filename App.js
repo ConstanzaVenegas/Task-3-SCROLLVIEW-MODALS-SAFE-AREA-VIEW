@@ -67,7 +67,8 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  // TODO STEP 4: add the state for the selected contacts (an array)
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const isShareDisabled = selectedContacts.length === 0;
 
   const followers = BASE_FOLLOWERS + (isFollowing ? 1 : 0);
   const isSendDisabled = message.trim().length === 0;
@@ -102,9 +103,21 @@ export default function App() {
 
   const closeModal = () => {
     setModalVisible(false);
+    setSelectedContacts([]);
   };
 
-  // TODO STEP 4: write handleContactPress and handleConfirmShare
+  const handleContactPress = (name) => {
+    setSelectedContacts(
+      selectedContacts.includes(name)
+        ? selectedContacts.filter((item) => item !== name)
+        : [...selectedContacts, name]
+    );
+  };
+
+  const handleConfirmShare = () => {
+    Alert.alert('Profile shared', 'Sent to: ' + selectedContacts.join(', '));
+    closeModal();
+  };
 
   // TODO STEP 5: wrap the whole screen in a SafeAreaView
   return (
@@ -175,7 +188,6 @@ export default function App() {
             Tap a skill to select it · {selectedSkills.length} selected
           </Text>
 
-          {/* TODO STEP 3: add the 'Recent projects' horizontal ScrollView here (use PROJECTS) */}
           <Text style={styles.sectionTitle}>RECENT PROJECTS</Text>
 
           <ScrollView
@@ -262,9 +274,47 @@ export default function App() {
           <Pressable style={StyleSheet.absoluteFill} onPress={closeModal} />
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>Share profile</Text>
-            <Text style={styles.sheetText}>
-              Share Alex's profile with your team.
-            </Text>
+            <Text style={styles.sheetText}>Choose who gets Alex's profile.</Text>
+
+            <ScrollView style={styles.contactList}>
+              {CONTACTS.map((name) => {
+                const isSelected = selectedContacts.includes(name);
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => handleContactPress(name)}
+                    style={({ pressed }) => [
+                      styles.contactRow,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.contactName}>{name}</Text>
+                    <View
+                      style={[styles.checkbox, isSelected && styles.checkboxSelected]}
+                    >
+                      {isSelected && <Text style={styles.checkMark}>✓</Text>}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <Pressable
+              disabled={isShareDisabled}
+              onPress={handleConfirmShare}
+              style={({ pressed }) => [
+                styles.shareButton,
+                isShareDisabled && styles.shareButtonDisabled,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.shareButtonText}>
+                {isShareDisabled
+                  ? 'Select contacts'
+                  : `Share with ${selectedContacts.length}`}
+              </Text>
+            </Pressable>
+
             <Pressable
               onPress={closeModal}
               style={({ pressed }) => [
@@ -272,7 +322,7 @@ export default function App() {
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.sheetCloseText}>Close</Text>
+              <Text style={styles.sheetCloseText}>Cancel</Text>
             </Pressable>
           </View>
         </View>
